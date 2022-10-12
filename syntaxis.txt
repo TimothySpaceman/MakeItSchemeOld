@@ -1,0 +1,29 @@
+Початок Текст?
+type: "start"
+text: "Text"
+
+Кінець Текст?
+type: "end"
+text: "Text"
+
+Вводимо ДАНІ
+type: "input"
+text: "ДАНІ"
+
+Виводимо ДАНІ
+type: "output"
+text: "ДАНІ"
+
+Виконуємо ДІЯ
+type: "action"
+text: "ДІЯ"
+
+Умова УМОВА
+Так:
+Дії або ...
+Ні:
+Дії або ...
+type: "condition"
+text: "УМОВА"
+yes: [Дії]
+no: [Дії]

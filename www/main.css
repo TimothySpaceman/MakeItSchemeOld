@@ -1,0 +1,125 @@
+/*#0F0F19 #1F1F33 #3D3D66 #6363A6 #9191F2 #6B6BB3
+
+/*@font-face {
+    font-family: "Minecraft"; 
+
+    src: url("../fonts/minecraft.woff") format("woff"); 
+    font-style: normal; 
+    font-weight: normal; 
+} */
+
+@font-face {
+    font-family: "Consolas"; 
+
+    src: url("../fonts/consolas.woff") format("woff"); 
+    font-style: normal; 
+    font-weight: normal; 
+}
+
+* {
+    outline: none;
+    margin: 0;
+    padding: 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(51,51,51,0) rgb(63,63,63);
+    font-smooth: never;
+    -webkit-font-smoothing : none;
+}
+
+*::-webkit-scrollbar {
+   width: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(51,51,51,0);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgb(63,63,63);
+  border-radius: 0px;
+}
+
+body {
+    /*background-color: #999999;
+    
+    */
+    background-color: #0F0F19;
+    display: flex;
+    flex-direction: row;
+    overflow-x: hidden;
+}
+
+.centred{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#mainDiv{
+    margin-top: 0px;
+}
+
+#headArea{
+    display: flex;
+    flex-direction: column;
+}
+
+#mainArea{
+    margin-top: 1.5vw;
+    margin-bottom: 1.5vw;
+    display: flex;
+    flex-direction: row;
+    background-color: #10101C;
+    width: 75vw;
+    min-height: 55vh;
+    box-shadow: 0px 8px 10px 0px rgba(0,0,0,0.75);
+}
+
+#pageTitle{
+    margin-top: 1.5vw;
+    color: #CCCCFF;
+    font-family: Consolas;
+    font-size: 6vw;
+    text-shadow: 0px 5px 7px rgba(0, 0, 0, 0.5);
+}
+
+#manuscript{
+    color: #CCCCFF;
+    font-family: Consolas;
+    font-size: 1.1vw;
+    text-align: center;
+    margin-top: 1vw;
+    width: 60vw;
+}
+
+#lineNumbers{
+    margin-left: 10px;
+    margin-top: 5px;
+    font-size: 20px;
+    color: #9191F2;
+    font-family: Consolas;
+    text-align: right;
+    width: 30px;
+}
+
+#textEditor{
+    margin-top: 5px;
+    margin-left: 10px;
+    width: 37vw;
+    min-width: 10px;
+    max-width: 75vw;
+    min-height: 55vh;
+    height: 100%;
+
+    resize: horizontal;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    word-wrap: unset;
+
+    font-size: 20px;
+    color: #E5E5FF;
+    font-family: Consolas;
+
+    background-color: #10101C;
+
+    border: none;
+}
