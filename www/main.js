@@ -5,6 +5,15 @@ let text = textEditor.value;
 let tree = Array(1);
 let lines = Array(1);
 
+const types = {
+    "Початок": "start",
+    "Кінець": "end",
+    "Вводимо": "input",
+    "Виводимо": "output",
+    "Виконуємо": "action",
+    "Умова": "condition"
+}
+
 function init(){
     tree[0] = "none";
     lines[0] = "none";
@@ -28,6 +37,10 @@ function updateEditor(){
     //console.log(text);
 }
 
+function getLineType(line){
+    return line.split(/ /)[0];
+}
+
 function parseText(){
     if(text != "" ) {
         lines = text.split(/\r?\n/);
@@ -35,9 +48,12 @@ function parseText(){
 }
 
 function growTree(){
+    let lastElement = 0;
     lines.forEach((line, index) => {
-        if(line != ""){
-
+        if(line != "" && (types[getLineType(line)] ?? false)){
+            tree[lastElement] = new Object();
+            tree[lastElement].type = types[getLineType(line)];
+            lastElement++;
         }
     })
 }
