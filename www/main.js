@@ -7,11 +7,14 @@ let lines = Array(1);
 
 const types = {
     "Початок": "start",
-    "Кінець": "end",
+    "Кінець": "finish",
     "Вводимо": "input",
     "Виводимо": "output",
     "Виконуємо": "action",
-    "Умова": "condition"
+    "Умова": "condition",
+    "Так:": "yes",
+    "Ні:": "no",
+    "...": "end"
 }
 
 function init(){
@@ -41,6 +44,11 @@ function getLineType(line){
     return line.split(/ /)[0];
 }
 
+function getLineData(line){
+    let lineParts = line.split(/ /).slice(1);
+    return lineParts.join(" ");
+}
+
 function parseText(){
     if(text != "" ) {
         lines = text.split(/\r?\n/);
@@ -51,12 +59,17 @@ function growTree(){
     let lastElement = 0;
     lines.forEach((line, index) => {
         if(line != "" && (types[getLineType(line)] ?? false)){
-            tree[lastElement] = new Object();
-            tree[lastElement].type = types[getLineType(line)];
+            tree[lastElement] = {
+                type: types[getLineType(line)],
+                line: index,
+                text: getLineData(line)
+            };
             lastElement++;
         }
     })
 }
+
+
 
 window.addEventListener("keyup", updateEditor);
 window.addEventListener("keydown", updateEditor);

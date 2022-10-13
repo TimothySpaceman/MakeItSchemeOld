@@ -101,6 +101,7 @@ body {
     width: 30px;
 }
 
+
 #textEditor{
     margin-top: 5px;
     margin-left: 10px;
@@ -122,4 +123,6 @@ body {
     background-color: #10101C;
 
     border: none;
+
+    text-decoration: none !important;
 }
