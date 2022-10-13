@@ -104,8 +104,8 @@ function processConditions(index){
                 return console.log("Error: Branch TRUE not found! Condition line: " + (tree[condIndex].line+1));
             }
         }
-        tree[condIndex].actions = new Object;
-        tree[condIndex].actions.yes = Array(0);
+        tree[condIndex].actions = {};
+        tree[condIndex].actions.yes = [];
         //tree[condIndex].actions.yes[0] = new Object({type: types["Порожньо"]});
         tree.splice(i, 1);
         status = 2;
@@ -120,7 +120,7 @@ function processConditions(index){
                 i++;
             }
             else{
-                tree[condIndex].actions.yes[tree[condIndex].actions.yes.length + 1] = tree[i];
+                tree[condIndex].actions.yes.push(tree[i]);
                 tree.splice(i, 1);
             }
 
@@ -129,7 +129,7 @@ function processConditions(index){
             }
         }
         if(tree[i].type == types["..."]){
-            tree[condIndex].actions.yes += tree[i];
+            tree[condIndex].actions.yes.push(tree[i]);
             tree.splice(i, 1);
         }
         status = 3;
@@ -143,8 +143,7 @@ function processConditions(index){
                 return console.log("Error: Branch FALSE not found! Condition line: " + (tree[condIndex].line+1));
             }
         }
-        tree[condIndex].actions.no = Array(1);
-        tree[condIndex].actions.no[0] = {type: types["Порожньо"]};
+        tree[condIndex].actions.no = [];
         tree.splice(i, 1);
         status = 4;
     }
@@ -157,7 +156,7 @@ function processConditions(index){
                 i++;
             }
             else{
-                tree[condIndex].actions.no += tree[i];
+                tree[condIndex].actions.no.push(tree[i]);;
                 tree.splice(i, 1);
             }
 
@@ -166,7 +165,7 @@ function processConditions(index){
             }
         }
         if(tree[i].type == types["..."]){
-            tree[condIndex].actions.no += tree[i];
+            tree[condIndex].actions.no.push(tree[i]);
             tree.splice(i, 1);
         }
         status = 5;
