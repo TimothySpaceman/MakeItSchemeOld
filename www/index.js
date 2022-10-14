@@ -4,6 +4,17 @@ const textEditor = document.querySelector("#textEditor")
 let text = textEditor.value
 let tree = []
 let lines = []
+let treeStats = {
+    start: 0,
+    finish: 0,
+    input: 0,
+    output: 0,
+    action: 0,
+    condition: 0,
+    yes: 0,
+    no: 0,
+    end: 0,
+}
 
 //| 0-Searching Condition | 1-Searching Yes | 2-Packing Yes | 3-Searching No | 4-Packing No | 5-Success |
 
@@ -12,10 +23,8 @@ const statuses = {
     DEFAULT: 0,
     FIND_YES: 1,
     FIND_NO: 2,
-    FIND_END: 3,
-    SEARCHING_NO: 3,
-    PACKING_NO: 4,
-    SUCCESS: 5
+    PACK_YES: 3,
+    PACK_NO: 4
 }
 
 const types = {
@@ -82,16 +91,20 @@ function growTree(){
     let lastElement = 0
     lines.forEach((line, index) => {
         if (line != "" && (types[getLineType(line)] ?? false)) {
-            tree[lastElement] = {
-                type: types[getLineType(line)],
-                id: lastElement,
-                line: index+1,
-                text: getLineData(line),
-                actions: "none",
-                child: []
-            }
+            if((treeStats.start == 1 || types[getLineType(line)] == "start") && treeStats.finish == 0){
+                tree[lastElement] = {
+                    type: types[getLineType(line)],
+                    id: lastElement,
+                    line: index+1,
+                    text: getLineData(line),
+                    actions: "none",
+                    child: []
+                }
 
-            lastElement++
+                treeStats[types[getLineType(line)]]++
+                
+                lastElement++
+            }
         }
     })
 }
@@ -112,119 +125,58 @@ function clearChild(){
 }
 
 function processChild(){
-    let condition = -1
-    let subCondition = false
-    let previous = -1
-    let yesLast = -1
-    let noLast = -1
+    let condition = []
+    let yesEnd = []
     let dots = 0
-    let status = statuses["DEFAULT"]
+    let status = []
         
-    for (let i = 0; i < tree.length; i=i){
-        
+    for (let i = 0; i < tree.length; i++){
         if(tree[i].type == types["Умова"]){
-            if(condition == -1 && tree[i].child.length==0){
-                condition = i    
-                status = statuses["FIND_YES"]
-            }
-            i++
-            previous = i-1
+            condition.push(i)
+            status.push(statuses["FIND_YES"])
         }
-        else if(tree[i].type == types["Так:"] && status == statuses["FIND_YES"]){
-            i++
+        else if(tree[i].type == types["Так:"] && status[status.length-1] == statuses["FIND_YES"]){
             dots++
-            previous = condition
-            subCondition = false
-
-            while(true){
-                if(tree[i].type == types["Так:"] || tree[i].type == types["Ні:"]){
-                    dots++
-                }
-                else if(tree[i].type == types["..."]){
-                    dots--
-                    if(dots == 0){
-                        yesLast = previous
-                        i++
-                        status = statuses["FIND_NO"]
-                        break
-                    }
-                }
-                else if(subCondition == false){
-                    if(tree[i].type == types["Умова"]){
-                        subCondition = true
-                        tree[previous].child.push(i)
-                    }
-                    previous = i
-                }
-                i++
-            }
+            tree[condition[condition.length-1]].child[0] = i
+            status[status.length-1] = statuses["PACK_YES"]
+            tree[i].child[0] = i+1
         }
-        else if(tree[i].type == types["Ні:"] && status == statuses["FIND_NO"]){
-            i++
+        else if(tree[i].type == types["Ні:"] && status[status.length-1] == statuses["FIND_NO"]){
             dots++
-            previous = condition
-            subCondition = false
-
-            while(true){
-                if(tree[i].type == types["Так:"] || tree[i].type == types["Ні:"]){
-                    dots++
-                }
-                else if(tree[i].type == types["..."]){
-                    dots--
-                    if(dots == 0){
-                        noLast = previous
-                        if(yesLast == condition){
-                            tree[condition].child[0] = i+1
-                        }
-                        else if(tree[yesLast].type != types["Умова"]){
-                            tree[yesLast].child.push(i+1)
-                        }
-                        if(noLast == condition){
-                            tree[condition].child[1] = i+1
-                        }
-                        else {
-                            tree[noLast].child.push(i+1)
-                        }
-                        i++
-                        condition = -1
-                        subCondition = false
-                        previous = -1
-                        yesLast = -1
-                        noLast = -1
-                        status = statuses["DEFAULT"]
-                        break
-                    }
-                }
-                else if(subCondition == false){
-                    if(tree[i].type == types["Умова"]){
-                        subCondition = true
-                        tree[previous].child.push(i)
-                    }
-                    previous = i
-                }
-                i++
+            tree[condition[condition.length-1]].child[1] = i
+            status[status.length-1] = statuses["PACK_NO"]
+            tree[i].child[0] = i+1
+        }
+        else if(tree[i].type == types["..."]){
+            dots--
+            if(status[status.length-1] == statuses["PACK_YES"]){
+                status[status.length-1] = statuses["FIND_NO"]
+                yesEnd.push(i)
             }
-            
+            else if(status[status.length-1] == statuses["PACK_NO"]){
+                status.splice(status.length-1, 1)
+                tree[i].child[0] = i+1
+                tree[yesEnd[yesEnd.length - 1]].child[0] = i+1
+                yesEnd.splice(yesEnd.length-1, 1)
+                condition.splice(condition.length-1, 1)
+            }
         }
         else {
-            if(tree[i].type != types["Так:"] && tree[i].type != types["Ні:"] && tree[i].child.length == 0) {
-                tree[i].child.push(i+1)
-            }
-            i++
+            tree[i].child[0] = i+1
         }
     }
+    
+}
 
-    // tree.forEach((object) => {
-    //     object.child.splice(0, object.child.length);
-    //     //console.log("Type: " + object.type + " id: " + object.id + " line: " + object.line)
-    //     if(object.type == types["Умова"]){
-    //         lastCondition++;
-    //         conditions[lastCondition] = object.id;
-    //     }
-    //     else if(object.type == types["Так"]){
-    //         if(tree[conditions[lastCondition]].child[])
-    //     }
-    // })
+function clearService(){
+    for (let i = 0; i < tree.length - 1; i++){
+        for(let childInd = 0; childInd < tree[i].child.length; childInd++){
+            if(tree[tree[i].child[childInd]].type == types["Так:"] || tree[tree[i].child[childInd]].type == types["Ні:"] || tree[tree[i].child[childInd]].type == types["..."]){
+                tree[i].child[childInd] = tree[tree[i].child[childInd]].child[0]
+                break;
+            }
+        }
+    }
 }
 
 ["keyup", "keydown", "mousemove"].forEach((el) => {
@@ -233,7 +185,6 @@ function processChild(){
 
 function mainLoop() {
     updateEditor()
-
     requestAnimationFrame(mainLoop)
 }
 
