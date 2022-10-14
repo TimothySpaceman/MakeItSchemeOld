@@ -119,25 +119,16 @@ function processChild(){
     let noLast = -1
     let dots = 0
     let status = statuses["DEFAULT"]
-
-    console.log("Before ")
-        console.log(tree[6].child)
-        console.log("")
-
+        
     for (let i = 0; i < tree.length; i=i){
-        console.log("Iteration " + i)
-        console.log(tree[6].child)
-        console.log("")
+        
         if(tree[i].type == types["Умова"]){
             if(condition == -1 && tree[i].child.length==0){
                 condition = i    
                 status = statuses["FIND_YES"]
-                console.log("Processing Condition " + condition)
             }
             i++
             previous = i-1
-            console.log("In Condition ")
-            console.log(tree[6].child)
         }
         else if(tree[i].type == types["Так:"] && status == statuses["FIND_YES"]){
             i++
@@ -146,9 +137,6 @@ function processChild(){
             subCondition = false
 
             while(true){
-                console.log("Checking object " + i)
-                console.log("SubCondition " + subCondition)
-                console.log(tree[6].child)
                 if(tree[i].type == types["Так:"] || tree[i].type == types["Ні:"]){
                     dots++
                 }
@@ -158,21 +146,17 @@ function processChild(){
                         yesLast = previous
                         i++
                         status = statuses["FIND_NO"]
-                        console.log("Closing YES branch ")
-                        checkChild()
                         break
                     }
                 }
                 else if(subCondition == false){
                     if(tree[i].type == types["Умова"]){
                         subCondition = true
-                        console.log("Pushing child for element " + previous)
                         tree[previous].child.push(i)
                     }
                     previous = i
                 }
                 i++
-                console.log(tree[6].child)
             }
         }
         else if(tree[i].type == types["Ні:"] && status == statuses["FIND_NO"]){
@@ -202,8 +186,12 @@ function processChild(){
                             tree[noLast].child.push(i+1)
                         }
                         i++
-                        console.log("Closing NO branch ")
-                        checkChild()
+                        condition = -1
+                        subCondition = false
+                        previous = -1
+                        yesLast = -1
+                        noLast = -1
+                        status = statuses["DEFAULT"]
                         break
                     }
                 }
