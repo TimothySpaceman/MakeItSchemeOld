@@ -9,9 +9,10 @@ let lines = []
 
 // Enum
 const statuses = {
-    SEARCHING_CONDITION: 0,
-    SEARCHING_YES: 1,
-    PACKING_YES: 2,
+    DEFAULT: 0,
+    FIND_YES: 1,
+    FIND_NO: 2,
+    FIND_END: 3,
     SEARCHING_NO: 3,
     PACKING_NO: 4,
     SUCCESS: 5
@@ -83,9 +84,11 @@ function growTree(){
         if (line != "" && (types[getLineType(line)] ?? false)) {
             tree[lastElement] = {
                 type: types[getLineType(line)],
-                line: index,
+                id: lastElement,
+                line: index+1,
                 text: getLineData(line),
-                actions: "none"
+                actions: "none",
+                child: []
             }
 
             lastElement++
@@ -93,121 +96,147 @@ function growTree(){
     })
 }
 
-function processConditions(index, parent){
-    let i = index
-    let condIndex = index
-    const checkFinish = tree.type != types["Кінець"]
-    const checkProcessed = tree.actions != "none"
-    let status = statuses.SEARCHING_CONDITION; //| 0-Searching Condition | 1-Searching Yes | 2-Packing Yes | 3-Searching No | 4-Packing No | 5-Success |
-    let dotLevel = 0
+// lastCondition - індекс елементу масиву, де лежить айді умови, для якої шукаємо так і ні
+// ConditionID [] - масив айді для умов
 
-    //Searching condition
+function checkChild(){
+    tree.forEach((object)=>{
+        console.log("ID: " + object.id + " Child: " + object.child)
+    })
+}
 
-    if (status == statuses.SEARCHING_CONDITION) {
-        while (tree[i].type != types["Умова"] && checkFinish) {
-            i++
+function clearChild(){
+    tree.forEach((object)=>{
+        object.child.splice(0, object.child.length)
+    })
+}
 
-            if (i>=tree.length || !checkFinish) {
-                return console.log("Error: Condition Not Found")
+function processChild(){
+    let condition = -1
+    let subCondition = false
+    let previous = -1
+    let yesLast = -1
+    let noLast = -1
+    let dots = 0
+    let status = statuses["DEFAULT"]
+
+    console.log("Before ")
+        console.log(tree[6].child)
+        console.log("")
+
+    for (let i = 0; i < tree.length; i=i){
+        console.log("Iteration " + i)
+        console.log(tree[6].child)
+        console.log("")
+        if(tree[i].type == types["Умова"]){
+            if(condition == -1 && tree[i].child.length==0){
+                condition = i    
+                status = statuses["FIND_YES"]
+                console.log("Processing Condition " + condition)
             }
-        }
-
-        if (!checkProcessed) {
-            condIndex = i
-            status = statuses.SEARCHING_YES
-        } else {
-            //Почему ты считаешь что не сработает?
-            processConditions(i+1, tree[i])
-            return
-        }
-    }
-
-    //Searching YES
-    if (status == statuses.SEARCHING_YES) {
-        while (tree[i].type != types["Так:"] && checkFinish) {
             i++
-
-            if (i >= tree.length || !checkFinish) {
-                return console.log("Error: Branch TRUE not found! Condition line: " + (tree[condIndex].line+1))
-            }
+            previous = i-1
+            console.log("In Condition ")
+            console.log(tree[6].child)
         }
+        else if(tree[i].type == types["Так:"] && status == statuses["FIND_YES"]){
+            i++
+            dots++
+            previous = condition
+            subCondition = false
 
-        tree[condIndex].actions = {
-            yes: []
-        }
-        
-        tree.splice(i, 1)
-        status = statuses.PACKING_YES
-        dotLevel++
-    }
-
-    
-    //Packing YES
-    if (status == statuses.PACKING_YES) {
-        while (checkFinish) {
-            if (tree[i].type == types.includes("Так:", "Ні:")) {
-                dotLevel++
-            } else if (tree[i].type == types["..."]) {
-                if (dotLevel == 1) {
-                    status = statuses.SEARCHING_NO
-                    dotLevel--
-                    parent.actions.yes.push(tree.splice(i, 1)[0])
-                    break
+            while(true){
+                console.log("Checking object " + i)
+                console.log("SubCondition " + subCondition)
+                console.log(tree[6].child)
+                if(tree[i].type == types["Так:"] || tree[i].type == types["Ні:"]){
+                    dots++
                 }
-
-                dotLevel--
-            }
-
-            parent.actions.yes.push(tree.splice(i, 1)[0])
-
-            if (i >= tree.length || !checkFinish) {
-                return console.log("Error: Branch TRUE not completed correctly! Condition line: " + (tree[condIndex].line+1))
-            }
-        }
-    }
-
-    //Searching NO
-    if (status == statuses.SEARCHING_NO) {
-        while (tree[i].type != types["Ні:"] && checkFinish) {
-            i++
-            if (i >= tree.length || !checkFinish) {
-                return console.log("Error: Branch FALSE not found! Condition line: " + (tree[condIndex].line+1))
-            }
-        }
-
-        tree[condIndex].actions.no = []
-        
-        tree.splice(i, 1)
-        status = statuses.PACKING_NO
-        dotLevel++
-    }
-
-    //Packing NO
-    if (status == statuses.PACKING_NO) {
-        while (checkFinish) {
-            if (tree[i].type == types.includes("Так:", "Ні:")) {
-                dotLevel++
-            } else if (tree[i].type == types["..."]) {
-                if (dotLevel == 1) {
-                    status = statuses.SUCCESS 
-                    dotLevel--
-                    parent.actions.yes.push(tree.splice(i, 1)[0])
-                    break
+                else if(tree[i].type == types["..."]){
+                    dots--
+                    if(dots == 0){
+                        yesLast = previous
+                        i++
+                        status = statuses["FIND_NO"]
+                        console.log("Closing YES branch ")
+                        checkChild()
+                        break
+                    }
                 }
-                dotLevel--
+                else if(subCondition == false){
+                    if(tree[i].type == types["Умова"]){
+                        subCondition = true
+                        console.log("Pushing child for element " + previous)
+                        tree[previous].child.push(i)
+                    }
+                    previous = i
+                }
+                i++
+                console.log(tree[6].child)
             }
+        }
+        else if(tree[i].type == types["Ні:"] && status == statuses["FIND_NO"]){
+            i++
+            dots++
+            previous = condition
+            subCondition = false
 
-            parent.actions.yes.push(tree.splice(i, 1)[0])
+            while(true){
+                if(tree[i].type == types["Так:"] || tree[i].type == types["Ні:"]){
+                    dots++
+                }
+                else if(tree[i].type == types["..."]){
+                    dots--
+                    if(dots == 0){
+                        noLast = previous
+                        if(yesLast == condition){
+                            tree[condition].child[0] = i+1
+                        }
+                        else if(tree[yesLast].type != types["Умова"]){
+                            tree[yesLast].child.push(i+1)
+                        }
+                        if(noLast == condition){
+                            tree[condition].child[1] = i+1
+                        }
+                        else {
+                            tree[noLast].child.push(i+1)
+                        }
+                        i++
+                        console.log("Closing NO branch ")
+                        checkChild()
+                        break
+                    }
+                }
+                else if(subCondition == false){
+                    if(tree[i].type == types["Умова"]){
+                        subCondition = true
+                        tree[previous].child.push(i)
+                    }
+                    previous = i
+                }
+                i++
+            }
             
-            if (i >= parent.length || !checkFinish) {
-                return console.log("Error: Branch FALSE not completed correctly! Condition line: " + (parent[condIndex].line+1))
+        }
+        else {
+            if(tree[i].type != types["Так:"] && tree[i].type != types["Ні:"] && tree[i].child.length == 0) {
+                tree[i].child.push(i+1)
             }
+            i++
         }
     }
 
-    if (status == statuses.SUCCESS) {
-        return console.log("Successfully processed condition in line: " + (parent[condIndex].line+1))
-    }
+    // tree.forEach((object) => {
+    //     object.child.splice(0, object.child.length);
+    //     //console.log("Type: " + object.type + " id: " + object.id + " line: " + object.line)
+    //     if(object.type == types["Умова"]){
+    //         lastCondition++;
+    //         conditions[lastCondition] = object.id;
+    //     }
+    //     else if(object.type == types["Так"]){
+    //         if(tree[conditions[lastCondition]].child[])
+    //     }
+    // })
 }
 
 ["keyup", "keydown", "mousemove"].forEach((el) => {
@@ -225,4 +254,6 @@ function mainLoop() {
 function goo() {
     parseText()
     growTree()
+    clearChild()
+    processChild()
 }
