@@ -24,10 +24,9 @@ const types = {
     "Так:": "yes",
     "Ні:": "no",
     "...": "end",
-    "Порожньо": "nothingness",
 
     includes: function() {
-        arguments.forEach(prop => {
+        Array.from(arguments).forEach(prop => {
             if (Object.getOwnPropertyNames(this).includes(prop)) {
                 return true
             }
@@ -40,86 +39,91 @@ class Tree {
     constructor() {
         this.elements = []
         this.lines = []
+        this.stats = {}
 
-        this.stats = {
-            start: 0,
-            finish: 0,
-            input: 0,
-            output: 0,
-            action: 0,
-            condition: 0,
-            yes: 0,
-            no: 0,
-            end: 0,
-        }
+        Object.values(types).filter(el => typeof(el) === "string").forEach(stat => {
+            this.stats[stat] = 0
+        })
     }
 
     grow() {
-        lines.forEach((line, index) => {
-            if (line && types[getLineType(line)]) {
-                if ((this.stats.start == 1 || types[getLineType(line)] == "start") && this.stats.finish == 0) {
+        this.lines.forEach((line, index) => {
+            if (line && types[line.type]) {
+                if ((this.stats.start == 1 || types[line.type] == "start") && this.stats.finish == 0) {
                     this.elements.push(new Node({
-                        type: types[getLineType(line)],
-                        id: lastElement,
+                        type: types[line.type],
+                        id: this.elements.length,
                         line: index + 1,
-                        text: getLineData(line),
+                        text: line.text,
                         child: []
                     }))
 
-                    this.stats[types[getLineType(line)]]++
+                    this.stats[types[line.type]]++
                 }
             }
         })
     }
 
-    clear() {
-        this.elements.forEach(el => el.clear())
+    clearChild() {
+        this.elements.forEach(el => el.clearChild())
     }
 
-    process() {
+    processChild() {
         let condition = []
         let yesEnd = []
         let dots = 0
         let status = []
 
-        for (let i = 0; i < tree.length; i++) {
-            if (this[i].type == types["Умова"]) {
+        for (let i = 0; i < this.elements.length; i++) {
+            if (this.elements[i].type == types["Умова"]) {
                 condition.push(i)
                 status.push(statuses["FIND_YES"])
-            } else if (this[i].type == types["Так:"] && status[status.length-1] == statuses["FIND_YES"]) {
+            } else if (this.elements[i].type == types["Так:"] && status[status.length-1] == statuses["FIND_YES"]) {
                 dots++
-                this[condition[condition.length-1]].child[0] = i
+
+                this.elements[condition[condition.length-1]].child[0] = i
+
                 status[status.length-1] = statuses["PACK_YES"]
-                this[i].child[0] = i+1
-            } else if (this[i].type == types["Ні:"] && status[status.length-1] == statuses["FIND_NO"]) {
+                this.elements[i].child[0] = i+1
+            } else if (this.elements[i].type == types["Ні:"] && status[status.length-1] == statuses["FIND_NO"]) {
                 dots++
-                this[condition[condition.length-1]].child[1] = i
+
+                this.elements[condition[condition.length-1]].child[1] = i
+
                 status[status.length-1] = statuses["PACK_NO"]
-                this[i].child[0] = i+1
-            } else if (this[i].type == types["..."]) {
+                this.elements[i].child[0] = i+1
+            } else if (this.elements[i].type == types["..."]) {
                 dots--
+
                 if (status[status.length-1] == statuses["PACK_YES"]) {
                     status[status.length-1] = statuses["FIND_NO"]
                     yesEnd.push(i)
                 } else if (status[status.length-1] == statuses["PACK_NO"]) {
                     status.splice(status.length-1, 1)
-                    this[i].child[0] = i+1
-                    this[yesEnd[yesEnd.length - 1]].child[0] = i+1
+
+                    this.elements[i].child[1] = i+1
+                    this.elements[yesEnd[yesEnd.length - 1]].child[0] = i+1
+
                     yesEnd.splice(yesEnd.length-1, 1)
                     condition.splice(condition.length-1, 1)
                 }
             } else {
-                this[i].child[0] = i+1
+                this.elements[i].child[0] = i+1
             }
         }
     }
 
-    clearService(tree) {
-        for (let i = 0; i < tree.length - 1; i++) {
-            for (let childInd = 0; childInd < this[i].child.length; childInd++) {
-                if (types.includes("Так:", "Ні:", "...")) {
-                    this[i].child[childInd] = this[this[i].child[childInd]].child[0]
-                    break;
+    clearService() {
+        //Ниче не трогай, ща 
+        for (let i = 0; i < this.elements.length - 1; i++) {
+            for (let childInd = 0; childInd < this.elements[i].child.length; childInd++) {
+                try {
+                    if (["Так:", "Ні:", "..."].includes(tree.elements[tree.elements[i].child[childInd]].type)) {
+                        this.elements[i].child[childInd] = this.elements[this.elements[i].child[childInd]].child[0]
+                        break
+                    }
+                } catch {
+                    debugger
                 }
             }
         }
@@ -136,16 +140,16 @@ class Node {
         this.child = []
     }
 
-    clear() {
+    clearChild() {
         this.child.splice(0, this.child.length)
     }
 }
 
 class Line {
-    constructor({line}) {
-        this.type = line.split(" ")[0]
-        
-        if (types.includes("Вводимо", "Виводимо")) {
+    constructor(line) {
+        this.type = line.split(" ")[0]      
+
+        if (["Вводимо", "Виводимо"].includes(this.type)) {
             this.text = line
         } else {
             this.text = line.split(" ").slice(1).join(" ")
@@ -155,7 +159,6 @@ class Line {
 
 function init() {
     tree = new Tree()
-    lines = []
 }
 
 init()
@@ -188,7 +191,7 @@ function getLineData(line) {
 
 function parseText() {
     text.split(/\r?\n/).forEach((line) => {
-        lines.push(new Line(line))
+        tree.lines.push(new Line(line))
     })
     //Тут всё? ну да
     
@@ -255,7 +258,7 @@ function mainLoop() {
 
 function goo() {
     parseText()
-    growTree()
-    clearChild()
-    processChild()
+    tree.grow()
+    tree.clearChild()
+    tree.processChild()
 }
