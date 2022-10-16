@@ -1,4 +1,4 @@
 
-class SizedList {
+export class SizedList {
 
 }

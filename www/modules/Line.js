@@ -1,5 +1,5 @@
 
-class Line {
+export class Line {
     constructor(line) {
         this.type = line.split(" ")[0]      
 

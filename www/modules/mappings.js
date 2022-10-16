@@ -38,7 +38,7 @@ const types = {
     }
 }
 
-mappings = {
+export const mappings = {
     statuses,
     keyCodes,
     types

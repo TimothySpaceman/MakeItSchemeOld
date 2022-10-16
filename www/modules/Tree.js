@@ -4,7 +4,7 @@ import { Line } from "./Line.js"
 
 import { statuses, directions, types } from "./mappings.js"
 
-class Tree {
+export class Tree {
     constructor() {
         this.snapshot = []
         this.snapshotIndex = -1

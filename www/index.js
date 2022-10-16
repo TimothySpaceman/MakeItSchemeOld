@@ -6,6 +6,8 @@ import { Tree, mappings } from "./modules/index.js"
 
 let isCtrlPressed = 0
 
+// телегу глянь
+
 function updateEditor() {
     lineNumbers.innerHTML =""
 

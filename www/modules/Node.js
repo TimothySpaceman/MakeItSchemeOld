@@ -1,5 +1,5 @@
 
-class Node {
+export class Node {
     constructor({ type, line, id, text }) {
         this.type = type
         this.line = line
